@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Principal - Gimnasio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<style> body.dark-mode { background-color: #121212; color: #e0e0e0; } body.dark-mode .card { background-color: #1e1e1e; color: #e0e0e0; } body.dark-mode .table { color: #e0e0e0; } </style> </head> <body> <div class="container mt-4"> <div class="d-flex justify-content-between align-items-center mb-4"> <h2>Dashboard Principal</h2> <div> <button class="btn btn-outline-secondary me-2" onclick="toggleDarkMode()">🌙</button> <button class="btn btn-outline-danger">Cerrar sesión</button> </div> </div>
+<!-- Notificaciones --> <div id="notificaciones" class="alert alert-info" role="alert"> 🔔 Bienvenido al panel. Tienes 2 nuevas solicitudes pendientes. </div>
+  <!-- Métricas -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card text-center bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">Socios Activos</h5>
+          <p class="card-text fs-3" id="sociosActivos">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center bg-info text-white">
+        <div class="card-body">
+          <h5 class="card-title">Empleados Activos</h5>
+          <p class="card-text fs-3" id="empleadosActivos">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center bg-warning text-dark">
+        <div class="card-body">
+          <h5 class="card-title">Usuarios Totales</h5>
+          <p class="card-text fs-3" id="usuariosTotales">0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de acceso -->
+  <div class="row mb-4">
+    <div class="col-md-6 text-center">
+      <a href="admin-panel.html" class="btn btn-primary btn-lg w-100">Gestión de Socios</a>
+    </div>
+    <div class="col-md-6 text-center">
+      <a href="admin_empleados.html" class="btn btn-secondary btn-lg w-100">Gestión de Empleados</a>
+    </div>
+  </div>
+
+  <!-- Gráficas -->
+  <div class="row">
+    <div class="col-md-6">
+      <canvas id="graficaUsuarios"></canvas>
+    </div>
+    <div class="col-md-6">
+      <canvas id="graficaActivos"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+function calcularMetricas() {
+  // Recuperar datos desde localStorage
+  const socios = JSON.parse(localStorage.getItem("socios")) || [];
+  const empleados = JSON.parse(localStorage.getItem("empleados")) || [];
+
+  // Contar activos
+  const sociosActivos = socios.filter(s => s.activo === true).length;
+  const empleadosActivos = empleados.filter(e => e.activo === true).length;
+  const usuariosTotales = socios.length + empleados.length;
+
+  // Mostrar en tarjetas
+  document.getElementById("sociosActivos").textContent = sociosActivos;
+  document.getElementById("empleadosActivos").textContent = empleadosActivos;
+  document.getElementById("usuariosTotales").textContent = usuariosTotales;
+
+  // Gráfica de usuarios totales
+  new Chart(document.getElementById("graficaUsuarios"), {
+    type: 'bar',
+    data: {
+      labels: ['Socios', 'Empleados'],
+      datasets: [{
+        label: 'Usuarios Totales',
+        data: [socios.length, empleados.length],
+        backgroundColor: ['#28a745', '#17a2b8']
+      }]
+    }
+  });
+function toggleDarkMode() {
+  document.body.classList.toggle("dark-mode");
+}
+  // Gráfica de activos vs inactivos
+  new Chart(document.getElementById("graficaActivos"), {
+    type: 'doughnut',
+    data: {
+      labels: ['Socios Activos', 'Socios Inactivos', 'Empleados Activos', 'Empleados Inactivos'],
+      datasets: [{
+        data: [
+          sociosActivos,
+          socios.length - sociosActivos,
+          empleadosActivos,
+          empleados.length - empleadosActivos
+        ],
+        backgroundColor: ['#28a745', '#dc3545', '#17a2b8', '#ffc107']
+      }]
+    }
+  });
+}
+
+window.onload = calcularMetricas;
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
