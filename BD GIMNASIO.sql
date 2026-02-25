@@ -1,26 +1,27 @@
-CREATE DATABASE gimnasio;
+
 USE gimnasio;
+GO
 
 -- Tabla usuarios
 CREATE TABLE usuarios (
-    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT IDENTITY(1,1) PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    rol ENUM('Administrador','Recepcionista') NOT NULL,
-    password VARCHAR(255) NOT NULL
+    rol VARCHAR(20) NOT NULL CHECK (rol IN ('Administrador','Recepcionista')),
+    contrasena VARCHAR(255) NOT NULL
 );
 
 -- Tabla socios
 CREATE TABLE socios (
-    id_socio INT AUTO_INCREMENT PRIMARY KEY,
+    id_socio INT IDENTITY(1,1) PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     telefono VARCHAR(20),
     correo VARCHAR(100) UNIQUE,
-    estatus ENUM('activo','inactivo') DEFAULT 'activo'
+    estatus VARCHAR(10) DEFAULT 'activo' CHECK (estatus IN ('activo','inactivo'))
 );
 
 -- Tabla membresias
 CREATE TABLE membresias (
-    id_membresia INT AUTO_INCREMENT PRIMARY KEY,
+    id_membresia INT IDENTITY(1,1) PRIMARY KEY,
     tipo VARCHAR(50) NOT NULL,
     duracion INT NOT NULL, -- duración en días
     costo DECIMAL(10,2) NOT NULL
@@ -28,9 +29,9 @@ CREATE TABLE membresias (
 
 -- Tabla inscripciones
 CREATE TABLE inscripciones (
-    id_inscripcion INT AUTO_INCREMENT PRIMARY KEY,
-    id_socio INT,
-    id_membresia INT,
+    id_inscripcion INT IDENTITY(1,1) PRIMARY KEY,
+    id_socio INT NOT NULL,
+    id_membresia INT NOT NULL,
     fecha_inicio DATE,
     fecha_fin DATE,
     FOREIGN KEY (id_socio) REFERENCES socios(id_socio),
@@ -39,9 +40,9 @@ CREATE TABLE inscripciones (
 
 -- Tabla pagos
 CREATE TABLE pagos (
-    id_pago INT AUTO_INCREMENT PRIMARY KEY,
+    id_pago INT IDENTITY(1,1) PRIMARY KEY,
     monto DECIMAL(10,2) NOT NULL,
     fecha DATE NOT NULL,
-    id_inscripcion INT,
+    id_inscripcion INT NOT NULL,
     FOREIGN KEY (id_inscripcion) REFERENCES inscripciones(id_inscripcion)
 );
