@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Plus - Panel Principal</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Vinculamos los ESTILOS EXTERNOS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Chart.js para gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="container py-5">
+    <!-- Encabezado -->
+    <header class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+        <div>
+            <h1 class="fw-bold text-primary mb-0">🏋️‍♂️ Fitness Plus</h1>
+            <p class="text-muted mb-0">Panel de Administración General (Modo Diseño)</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary rounded-circle" onclick="toggleDarkMode()" title="Cambiar tema">🌙</button>
+            <button class="btn btn-danger px-4">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <!-- Mensaje de Bienvenida -->
+    <div class="alert alert-info text-center fw-semibold mb-4 shadow-sm" role="alert">
+        👋 Bienvenido al nuevo diseño del panel. Explora las opciones.
+    </div>
+
+    <!-- Tarjetas de Métricas -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 bg-success text-white text-center p-4 shadow-sm">
+                <h5 class="opacity-75 mb-3">Socios Activos</h5>
+                <h2 class="display-4 fw-bold mb-0" id="txtSocios">0</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 bg-info text-white text-center p-4 shadow-sm">
+                <h5 class="opacity-75 mb-3">Empleados</h5>
+                <h2 class="display-4 fw-bold mb-0" id="txtEmpleados">0</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 bg-dark text-white text-center p-4 shadow-sm">
+                <h5 class="opacity-75 mb-3">Usuarios Totales</h5>
+                <h2 class="display-4 fw-bold mb-0" id="txtTotal">0</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de Navegación -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <a href="admin-panel.html" class="btn btn-primary btn-lg w-100 py-3 shadow-sm rounded-3 fw-bold fs-5">
+                👥 Gestionar Socios
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="admin_empleados.html" class="btn btn-secondary btn-lg w-100 py-3 shadow-sm rounded-3 fw-bold fs-5">
+                👔 Gestionar Empleados
+            </a>
+        </div>
+    </div>
+
+    <!-- Sección de Gráfica -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card p-4 shadow-sm">
+                <h5 class="text-center text-muted mb-4">Distribución del Gimnasio</h5>
+                <div style="height: 300px; display: flex; justify-content: center;">
+                    <canvas id="chartPrincipal"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Vinculamos el JAVASCRIPT EXTERNO -->
+<script src="js/main.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
