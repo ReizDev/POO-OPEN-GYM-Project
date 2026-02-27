@@ -1,1 +1,0 @@
-# POO-OPEN-GYM-Project

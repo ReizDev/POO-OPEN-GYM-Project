@@ -3,19 +3,54 @@
 let chartInstance = null;
 
 async function cargarDatos() {
-    // Variables libres listas para recibir los datos reales de tu BD
-    let sociosActivos = 0;
-    let sociosInactivos = 0;
-    let empleados = 0;
-    let total = 0;
+    const statusDiv = document.getElementById("statusConnection");
+    
+    try {
+        // Hacemos la petición a la carpeta backend
+        const peticionSocios = await fetch('backend/api_socios.php');
+        const peticionUsuarios = await fetch('backend/api_usuarios.php');
 
-    // Actualizamos los números en pantalla
-    document.getElementById("txtSocios").textContent = sociosActivos;
-    document.getElementById("txtEmpleados").textContent = empleados;
-    document.getElementById("txtTotal").textContent = total;
+        // Verificamos que la petición haya sido exitosa
+        if (!peticionSocios.ok || !peticionUsuarios.ok) {
+            throw new Error("No se encontraron las APIs o hay un error en el servidor.");
+        }
 
-    // Dibujamos la gráfica inicial
-    dibujarGrafica(sociosActivos, sociosInactivos, empleados);
+        // Convertimos la respuesta a JSON
+        const socios = await peticionSocios.json();
+        const empleados = await peticionUsuarios.json();
+
+        // Si PHP nos devuelve un error de SQL (ej. falta la extensión)
+        if (socios.error || empleados.error) {
+            throw new Error(socios.error || empleados.error);
+        }
+
+        // Procesamos los datos reales
+        const sociosActivos = socios.filter(s => s.estatus === 'activo').length;
+        const sociosInactivos = socios.length - sociosActivos;
+        const numEmpleados = empleados.length;
+        const total = socios.length + numEmpleados;
+
+        // Actualizamos los números en pantalla
+        document.getElementById("txtSocios").textContent = sociosActivos;
+        document.getElementById("txtEmpleados").textContent = numEmpleados;
+        document.getElementById("txtTotal").textContent = total;
+
+        // Mostramos mensaje de éxito en pantalla
+        statusDiv.className = "alert alert-success text-center fw-semibold mb-4 shadow-sm";
+        statusDiv.innerHTML = "✅ Conectado exitosamente a SQL Server";
+
+        // Dibujamos la gráfica
+        dibujarGrafica(sociosActivos, sociosInactivos, numEmpleados);
+
+    } catch (error) {
+        console.error(error);
+        // Mostramos mensaje de error si falla la conexión
+        statusDiv.className = "alert alert-danger text-center fw-semibold mb-4 shadow-sm";
+        statusDiv.innerHTML = "❌ Error: No se pudo conectar a la base de datos.";
+        
+        // Dibujamos gráfica vacía por defecto
+        dibujarGrafica(0, 0, 0);
+    }
 }
 
 // Función para crear la gráfica de Chart.js
