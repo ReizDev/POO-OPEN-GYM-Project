@@ -17,15 +17,32 @@ switch($method) {
         echo json_encode($usuarios);
         break;
 
-    case 'POST': // Crear nuevo empleado
+    case 'POST': 
         $data = json_decode(file_get_contents('php://input'), true);
-        $pass = "123456"; // Contraseña temporal por defecto
-        $sql = "INSERT INTO usuarios (nombre, rol, contrasena) VALUES (?, ?, ?)";
-        $params = array($data['nombre'], $data['rol'], $pass);
-        $stmt = sqlsrv_query($conn, $sql, $params);
-        
-        if($stmt) echo json_encode(["status" => "ok"]);
-        else { http_response_code(400); echo json_encode(["error" => sqlsrv_errors()]); }
+
+        // 1. LÓGICA PARA INICIAR SESIÓN (LOGIN)
+        if (isset($data['accion']) && $data['accion'] === 'login') {
+            $sql = "SELECT id_usuario, nombre, rol FROM usuarios WHERE nombre = ? AND contrasena = ?";
+            $params = array($data['nombre'], $data['contrasena']);
+            $stmt = sqlsrv_query($conn, $sql, $params);
+            
+            if ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                echo json_encode(["status" => "success", "usuario" => $row]);
+            } else {
+                http_response_code(401);
+                echo json_encode(["status" => "error", "message" => "Usuario o clave incorrecta"]);
+            }
+        } 
+        // 2. LÓGICA PARA CREAR NUEVO EMPLEADO
+        else {
+            $pass = "123456"; // Contraseña temporal por defecto
+            $sql = "INSERT INTO usuarios (nombre, rol, contrasena) VALUES (?, ?, ?)";
+            $params = array($data['nombre'], $data['rol'], $pass);
+            $stmt = sqlsrv_query($conn, $sql, $params);
+            
+            if($stmt) echo json_encode(["status" => "ok"]);
+            else { http_response_code(400); echo json_encode(["error" => sqlsrv_errors()]); }
+        }
         break;
 
     case 'PUT': // Editar empleado
@@ -48,5 +65,4 @@ switch($method) {
         else { http_response_code(400); echo json_encode(["error" => sqlsrv_errors()]); }
         break;
 }
-sqlsrv_close($conn);
 ?>

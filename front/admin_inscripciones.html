@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Plus - Inscripciones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="container py-5">
+    <header class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <h2 class="fw-bold text-success mb-0">📝 Inscripciones Activas</h2>
+            <p class="text-muted mb-0">Controla los planes asignados a tus socios</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary rounded-circle" onclick="toggleDarkMode()" title="Cambiar tema">🌙</button>
+            <a href="admin.html" class="btn btn-outline-secondary px-4">Volver al Panel</a>
+        </div>
+    </header>
+
+    <div class="d-flex justify-content-between mb-4">
+        <button class="btn btn-success fw-bold btn-lg shadow-sm" data-bs-toggle="modal" data-bs-target="#modalInscripcion" onclick="abrirModal()">
+            ➕ Nueva Inscripción
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="table table-hover align-middle" id="tablaInscripciones">
+            <thead class="table-dark">
+                <tr>
+                    <th>Folio</th>
+                    <th>Socio</th>
+                    <th>Membresía</th>
+                    <th>Inicio</th>
+                    <th>Vencimiento</th>
+                    <th>Estatus</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">Cargando datos...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para Inscribir -->
+<div class="modal fade" id="modalInscripcion" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content shadow" onsubmit="guardarInscripcion(event)">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold">Registrar Inscripción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Seleccionar Socio</label>
+                    <select id="selectSocio" class="form-select" required>
+                        <option value="">Cargando socios...</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Seleccionar Membresía</label>
+                    <select id="selectMembresia" class="form-select" onchange="calcularVencimiento()" required>
+                        <option value="">Cargando planes...</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label text-muted small fw-bold">Fecha de Inicio</label>
+                        <input type="date" id="fecha_inicio" class="form-control" onchange="calcularVencimiento()" required>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label text-muted small fw-bold">Fecha de Vencimiento</label>
+                        <input type="date" id="fecha_fin" class="form-control" readonly required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 bg-light rounded-bottom">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success fw-bold px-4">Inscribir</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/inscripciones.js"></script>
+</body>
+</html>
