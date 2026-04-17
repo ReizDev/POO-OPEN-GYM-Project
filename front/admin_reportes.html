@@ -6,12 +6,79 @@
     <title>Fitness Plus - Reportes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Estilos específicos para impresión */
+        /* =========================================
+           REGLAS ESTRICTAS PARA GENERAR EL PDF
+           ========================================= */
         @media print {
-            .no-print { display: none !important; }
-            body { background-color: white !important; color: black !important; }
-            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            /* 1. Forzar colores de fondo para que las tarjetas se vean vivas */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            body { 
+                background-color: white !important; 
+                color: black !important; 
+            }
+            
+            /* 2. Evitar que números grandes (como $5800.00) se partan a la mitad */
+            .display-3 { font-size: 2.5rem !important; }
+            
+            /* 3. Desactivar alturas fijas (Esto evita que la tabla se encime) */
+            .h-100 { height: auto !important; }
+            
+            /* 4. Apilar todo verticalmente (Una sola columna) para que no haya desbordes */
+            .row { 
+                display: block !important; 
+                margin-bottom: 0 !important;
+            }
+            .col-md-4, .col-md-6, .col-md-8, .col-md-12 { 
+                width: 100% !important; 
+                max-width: 100% !important; 
+                margin-bottom: 20px !important;
+            }
+
+            /* EXCEPCIÓN: Las dos tarjetas verdes y azules sí van mitad y mitad */
+            #tarjetas-resumen {
+                display: flex !important;
+                flex-wrap: wrap !important;
+            }
+            #tarjetas-resumen .col-md-6 {
+                width: 50% !important;
+                max-width: 50% !important;
+                flex: 0 0 50% !important;
+                padding: 0 10px !important;
+            }
+
+            /* 5. Asegurar que una tarjeta/tabla no se corte entre dos hojas */
+            .card { 
+                break-inside: avoid; 
+                border: 1px solid #dee2e6 !important; 
+                margin-bottom: 20px !important;
+            }
+
+            /* 6. Liberar la tabla para que se expanda hacia abajo todo lo necesario */
+            .table-responsive {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            /* 7. Ocultar botones y barra de búsqueda (Debe ir al final para que gane prioridad) */
+            .no-print, .no-print * { 
+                display: none !important; 
+            }
+
+            /* ========================================================
+               8. ¡NUEVO PARCHE! Evitar que la gráfica se salga de la tarjeta
+               ======================================================== */
+            .card-body {
+                overflow: hidden !important; /* Corta cualquier cosa que se intente salir */
+            }
+            canvas {
+                max-width: 100% !important;  /* Obliga al dibujo a encogerse al tamaño del papel */
+                height: auto !important;     /* Mantiene la proporción para que no se estire raro */
+            }
         }
     </style>
 </head>
@@ -21,21 +88,40 @@
     <header class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
             <h2 class="fw-bold text-danger mb-0">📊 Reporte Financiero</h2>
-            <p class="text-muted mb-0">Resumen general de ingresos e inscripciones</p>
+            <p class="text-muted mb-0">Análisis de ingresos por periodo o folio individual</p>
         </div>
         <div class="d-flex gap-2 no-print">
             <button class="btn btn-outline-secondary rounded-circle" onclick="toggleDarkMode()" title="Cambiar tema">🌙</button>
-            <button class="btn btn-secondary px-4" onclick="window.print()">🖨️ Imprimir PDF</button>
+            <button class="btn btn-secondary px-4 fw-bold" onclick="window.print()">🖨️ Imprimir PDF</button>
             <a href="admin.html" class="btn btn-outline-secondary px-4">Volver al Panel</a>
         </div>
     </header>
 
-    <!-- Tarjetas de Resumen -->
-    <div class="row g-4 mb-5">
+    <!-- Barra de Filtros (Se oculta en el PDF) -->
+    <div class="row mb-4 no-print align-items-center">
+        <div class="col-md-7 mb-3 mb-md-0">
+            <div class="btn-group w-100 shadow-sm" role="group" id="grupoFiltros">
+                <button type="button" class="btn btn-outline-danger active" onclick="cambiarFiltro('todos', this)">Todo el Historial</button>
+                <button type="button" class="btn btn-outline-danger" onclick="cambiarFiltro('semana', this)">Esta Semana</button>
+                <button type="button" class="btn btn-outline-danger" onclick="cambiarFiltro('mes', this)">Este Mes</button>
+                <button type="button" class="btn btn-outline-danger" onclick="cambiarFiltro('ano', this)">Este Año</button>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white fw-bold text-muted">🔍 Buscar Folio</span>
+                <input type="number" id="inputFolio" class="form-control" placeholder="Ej. 15">
+                <button class="btn btn-danger px-4 fw-bold" onclick="buscarFolio()">Buscar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Resumen Dinámico -->
+    <div class="row g-4 mb-5" id="tarjetas-resumen">
         <div class="col-md-6">
             <div class="card bg-success text-white h-100 shadow-sm border-0">
                 <div class="card-body p-4 text-center">
-                    <h5 class="opacity-75 fw-bold mb-3">INGRESOS TOTALES</h5>
+                    <h5 class="opacity-75 fw-bold mb-3">INGRESOS EN EL PERIODO</h5>
                     <h1 class="display-3 fw-bold mb-0" id="totalIngresos">$0.00</h1>
                 </div>
             </div>
@@ -43,38 +129,60 @@
         <div class="col-md-6">
             <div class="card bg-primary text-white h-100 shadow-sm border-0">
                 <div class="card-body p-4 text-center">
-                    <h5 class="opacity-75 fw-bold mb-3">MEMBRESÍAS ACTIVAS</h5>
-                    <h1 class="display-3 fw-bold mb-0" id="totalInscripciones">0</h1>
+                    <h5 class="opacity-75 fw-bold mb-3">CANTIDAD DE PAGOS</h5>
+                    <h1 class="display-3 fw-bold mb-0" id="totalPagos">0</h1>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- SECCIÓN DE GRÁFICAS -->
     <div class="row g-4 mb-4">
-        <!-- Desglose por Método de Pago -->
+        <!-- Gráfica Dona: Métodos de Pago -->
         <div class="col-md-4">
             <div class="card shadow-sm h-100 border-0">
                 <div class="card-header bg-dark text-white fw-bold">
-                    Ingresos por Método
+                    Desglose de Ingresos
                 </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush" id="listaMetodos">
+                <div class="card-body d-flex flex-column align-items-center">
+                    <div style="height: 220px; width: 100%; position: relative;">
+                        <canvas id="graficaMetodos"></canvas>
+                    </div>
+                    <ul class="list-group list-group-flush w-100 mt-3" id="listaMetodos">
                         <li class="list-group-item text-center text-muted">Cargando...</li>
                     </ul>
                 </div>
             </div>
         </div>
         
-        <!-- Últimos Pagos -->
+        <!-- Gráfica de Área: Tendencia -->
         <div class="col-md-8">
             <div class="card shadow-sm h-100 border-0">
-                <div class="card-header bg-dark text-white fw-bold">
-                    Últimos 10 Pagos Recibidos
+                <div class="card-header bg-danger text-white fw-bold">
+                    📈 Tendencia de Ingresos
+                </div>
+                <div class="card-body">
+                    <!-- Altura fija requerida por Chart.js -->
+                    <div style="height: 250px; width: 100%; position: relative;">
+                        <canvas id="graficaTendencia"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN DE TABLA -->
+    <div class="row g-4 mb-4">
+        <!-- Tabla de Resultados a Ancho Completo -->
+        <div class="col-md-12">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+                    <span id="tituloTabla">Detalle de Pagos</span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="tablaRecientes">
-                            <thead class="table-light">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover mb-0" id="tablaDetalle">
+                            <thead class="table-light sticky-top">
                                 <tr>
                                     <th>Folio</th>
                                     <th>Socio</th>

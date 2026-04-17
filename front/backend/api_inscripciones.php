@@ -7,7 +7,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch($method) {
     case 'GET': // Leer inscripciones con nombres de socio y membresía
         $sql = "SELECT i.id_inscripcion, i.id_socio, i.id_membresia, 
-                       s.nombre AS socio, m.nombre AS membresia, 
+                       s.nombre AS socio, m.nombre AS membresia, m.costo,
                        i.fecha_inicio, i.fecha_fin, i.estatus 
                 FROM inscripciones i 
                 INNER JOIN socios s ON i.id_socio = s.id_socio 

@@ -47,10 +47,12 @@ function renderTabla() {
                 <td>${ins.fecha_inicio}</td>
                 <td class="fw-bold text-primary">${ins.fecha_fin}</td>
                 <td><span class="badge bg-${color} rounded-pill">${ins.estatus}</span></td>
-                <td class="text-center">
+                <td class="text-center d-flex justify-content-center gap-1">
                     ${ins.estatus === 'activa' 
-                        ? `<button class="btn btn-sm btn-outline-danger mx-1" onclick="cambiarEstatus(${ins.id_inscripcion}, 'cancelada')">🚫 Cancelar</button>` 
-                        : `<button class="btn btn-sm btn-outline-success mx-1" onclick="cambiarEstatus(${ins.id_inscripcion}, 'activa')">✅ Reactivar</button>`}
+                        ? `<button class="btn btn-sm btn-outline-warning" onclick="cambiarEstatus(${ins.id_inscripcion}, 'cancelada')">🚫 Cancelar</button>` 
+                        : `<button class="btn btn-sm btn-outline-success" onclick="cambiarEstatus(${ins.id_inscripcion}, 'activa')">✅ Reactivar</button>`}
+                    
+                    <button class="btn btn-sm btn-danger" onclick="eliminarInscripcion(${ins.id_inscripcion})">🗑️ Eliminar</button>
                 </td>
             </tr>`;
         tbody.innerHTML += fila;
@@ -58,17 +60,14 @@ function renderTabla() {
 }
 
 function abrirModal() {
-    // Llenar select de socios
     const selSocio = document.getElementById("selectSocio");
     selSocio.innerHTML = `<option value="" selected disabled>Elige un socio...</option>` + 
         listaSocios.filter(s => s.estatus === 'activo').map(s => `<option value="${s.id_socio}">${s.nombre}</option>`).join('');
 
-    // Llenar select de membresias
     const selMem = document.getElementById("selectMembresia");
     selMem.innerHTML = `<option value="" selected disabled>Elige un plan...</option>` + 
         listaMembresias.filter(m => m.estatus === 'activo').map(m => `<option value="${m.id_membresia}" data-dias="${m.duracion_dias}">${m.nombre} ($${m.costo})</option>`).join('');
 
-    // Poner fecha de hoy por defecto
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById("fecha_inicio").value = hoy;
     document.getElementById("fecha_fin").value = "";
@@ -103,28 +102,19 @@ async function guardarInscripcion(event) {
             body: JSON.stringify(payload)
         });
         
-        // Extraemos la respuesta cruda para ver el error real de SQL Server
         const textoRespuesta = await res.text();
         let datos;
         
-        try {
-            datos = JSON.parse(textoRespuesta);
-        } catch (e) {
-            console.error("Error PHP crudo:", textoRespuesta);
-            throw new Error("El servidor devolvió un error interno de PHP.");
-        }
+        try { datos = JSON.parse(textoRespuesta); } catch (e) { throw new Error("Error interno del servidor PHP."); }
         
         if (!res.ok) {
-            console.error("Detalle del error BD:", datos.error);
-            // Intentamos extraer el mensaje descriptivo de SQL Server
             const sqlError = (datos.error && datos.error[0]) ? datos.error[0].message : JSON.stringify(datos.error);
-            throw new Error("BD rechazó el registro: " + sqlError);
+            throw new Error(sqlError);
         }
         
         obtenerInscripciones();
         bootstrap.Modal.getInstance(document.getElementById("modalInscripcion")).hide();
     } catch (error) {
-        console.error(error);
         alert("🚨 Detalle del error:\n\n" + error.message);
     }
 }
@@ -137,6 +127,40 @@ async function cambiarEstatus(id, nuevoEstatus) {
             body: JSON.stringify({ id_inscripcion: id, estatus: nuevoEstatus })
         });
         obtenerInscripciones();
+    }
+}
+
+// === NUEVA FUNCIÓN PARA ELIMINAR ===
+async function eliminarInscripcion(id) {
+    if (confirm(`⚠️ ADVERTENCIA: ¿Estás seguro de que deseas ELIMINAR permanentemente esta inscripción?\n\nNota: Si el socio ya pagó esta inscripción, el sistema protegerá la contabilidad y no te dejará borrarla.`)) {
+        try {
+            const res = await fetch('backend/api_inscripciones.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_inscripcion: id })
+            });
+            
+            const textoRespuesta = await res.text();
+            let datos;
+            
+            try { datos = JSON.parse(textoRespuesta); } catch (e) { throw new Error("Error interno PHP."); }
+            
+            if (!res.ok) {
+                const errorMsg = (datos.error && datos.error[0]) ? datos.error[0].message : "Error al borrar";
+                
+                // Detectar si SQL Server prohíbe el borrado porque hay pagos asociados (Error de Llave Foránea)
+                if (errorMsg.includes("REFERENCE constraint") || errorMsg.includes("FOREIGN KEY")) {
+                    throw new Error("No se puede eliminar esta inscripción porque ya tiene pagos registrados en caja.\n\nPara borrarla, primero debes ir a 'Pagos' y eliminar el pago correspondiente.");
+                }
+                
+                throw new Error(errorMsg);
+            }
+            
+            // Si todo sale bien, recargamos la tabla
+            obtenerInscripciones();
+        } catch (error) {
+            alert("🚨 " + error.message);
+        }
     }
 }
 

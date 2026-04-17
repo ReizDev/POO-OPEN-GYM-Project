@@ -42,6 +42,19 @@ switch($method) {
             echo json_encode(["error" => sqlsrv_errors()]); 
         }
         break;
+
+    case 'DELETE': // Eliminar un pago
+        $data = json_decode(file_get_contents('php://input'), true);
+        $sql = "DELETE FROM pagos WHERE id_pago = ?";
+        $params = array($data['id_pago']);
+        $stmt = sqlsrv_query($conn, $sql, $params);
+        
+        if($stmt) echo json_encode(["status" => "ok"]);
+        else { 
+            http_response_code(400); 
+            echo json_encode(["error" => sqlsrv_errors()]); 
+        }
+        break;
 }
 sqlsrv_close($conn);
 ?>
